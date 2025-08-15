@@ -49,6 +49,11 @@
   --purple-400: hsl(262, 83%, 58%);
   --yellow-400: hsl(54, 92%, 43%);
   --orange-400: hsl(25, 95%, 53%);
+  
+  /* Gradient background colors */
+  --gradient-start: hsl(280, 100%, 85%);
+  --gradient-mid: hsl(320, 100%, 90%);
+  --gradient-end: hsl(210, 100%, 95%);
 }
 
 .dark {
@@ -79,8 +84,16 @@
   }
   
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply text-foreground font-sans;
     font-family: 'Inter', sans-serif;
+  }
+  
+  body.gradient {
+    @apply gradient-bg;
+  }
+  
+  body.dark {
+    @apply bg-background;
   }
   
   html, body, #root {
@@ -90,6 +103,43 @@
 }
 
 @layer components {
+  .gradient-bg {
+    background: linear-gradient(135deg, 
+      hsl(var(--gradient-start)) 0%, 
+      hsl(var(--gradient-mid)) 50%, 
+      hsl(var(--gradient-end)) 100%
+    );
+  }
+  
+  .hero-container {
+    @apply min-h-screen flex flex-col items-center justify-center text-center px-6;
+  }
+  
+  .hero-title {
+    @apply text-5xl md:text-6xl font-bold text-slate-800 mb-6;
+    background: linear-gradient(135deg, #1f2937, #374151);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .hero-subtitle {
+    @apply text-lg md:text-xl text-slate-600 mb-12 max-w-2xl leading-relaxed;
+  }
+  
+  .hero-input {
+    @apply w-full max-w-3xl bg-white rounded-full px-6 py-4 text-slate-700 shadow-2xl border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .quick-actions {
+    @apply flex flex-wrap items-center justify-center gap-3 mt-8 max-w-2xl;
+  }
+  
+  .quick-action-btn {
+    @apply flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-70 hover:bg-opacity-90 rounded-full text-slate-700 text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg backdrop-blur-sm border border-white border-opacity-30;
+  }
+  
   .message-box {
     @apply max-w-[80%] break-words;
     animation: slideIn 0.3s ease-out;

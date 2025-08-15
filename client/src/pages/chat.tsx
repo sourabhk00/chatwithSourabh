@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FileManagerSidebar } from "@/components/file-manager/FileManagerSidebar";
 import { ChatInterface } from "@/components/chat/ChatInterface";
 import { CodeEditor } from "@/components/editor/CodeEditor";
+import { TopNavigation } from "@/components/navigation/TopNavigation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/hooks/use-chat";
 
@@ -32,34 +33,43 @@ export default function ChatPage() {
   }, [messages.length]);
 
   return (
-    <div className="flex h-screen bg-slate-900 text-white overflow-hidden">
-      {/* File Manager Sidebar */}
-      <FileManagerSidebar 
-        collapsed={sidebarCollapsed} 
-        onToggle={toggleSidebar}
-        selectedFileIds={selectedFileIds}
-        onFileSelect={setSelectedFileIds}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+    <div className="flex flex-col h-screen bg-slate-900 text-white overflow-hidden">
+      {/* Top Navigation */}
+      <TopNavigation 
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={toggleSidebar}
+        messages={messages}
       />
       
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col lg:flex-row">
-        {/* Chat Interface */}
-        <ChatInterface
-          onToggleSidebar={toggleSidebar}
-          onToggleEditor={toggleEditor}
+      <div className="flex flex-1 overflow-hidden">
+        {/* File Manager Sidebar */}
+        <FileManagerSidebar 
+          collapsed={sidebarCollapsed} 
+          onToggle={toggleSidebar}
           selectedFileIds={selectedFileIds}
-          editorVisible={editorVisible}
+          onFileSelect={setSelectedFileIds}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
         
-        {/* Code Editor */}
-        {editorVisible && (
-          <CodeEditor 
-            onClose={() => setEditorVisible(false)}
-            visible={editorVisible}
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col lg:flex-row">
+          {/* Chat Interface */}
+          <ChatInterface
+            onToggleSidebar={toggleSidebar}
+            onToggleEditor={toggleEditor}
+            selectedFileIds={selectedFileIds}
+            editorVisible={editorVisible}
           />
-        )}
+          
+          {/* Code Editor */}
+          {editorVisible && (
+            <CodeEditor 
+              onClose={() => setEditorVisible(false)}
+              visible={editorVisible}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

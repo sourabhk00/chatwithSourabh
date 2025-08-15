@@ -44,15 +44,6 @@ export function ChatInterface({
       {messages.length > 0 && (
         <div className="p-4 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
           <div className="flex items-center">
-            <button 
-              onClick={onToggleSidebar}
-              className="mr-3 text-slate-400 hover:text-white transition-colors"
-              data-testid="button-toggle-sidebar"
-              title="Toggle Sidebar"
-            >
-              <Sidebar className="h-5 w-5" />
-            </button>
-            
             <div className="flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
                 <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center">

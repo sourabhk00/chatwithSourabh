@@ -55,7 +55,7 @@ export function MessageList({ messages, isLoading, onSendMessage }: MessageListP
               }}
               data-testid="input-hero-message"
             />
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
               <input
                 type="file"
                 id="hero-file-input"
@@ -71,27 +71,35 @@ export function MessageList({ messages, isLoading, onSendMessage }: MessageListP
               />
               <button 
                 onClick={() => document.getElementById('hero-file-input')?.click()}
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10"
                 title="Upload Files"
                 data-testid="button-upload-files"
               >
-                <Paperclip className="h-5 w-5" />
+                <Paperclip className="h-4 w-4" />
               </button>
+              <div className="h-4 w-px bg-slate-300"></div>
               <button 
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10"
                 title="Voice Input"
                 data-testid="button-voice-input"
               >
-                <Mic className="h-5 w-5" />
+                <Mic className="h-4 w-4" />
               </button>
               <button 
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10"
                 title="Dictate Mode"
                 data-testid="button-dictate-mode"
               >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
                 </svg>
+              </button>
+              <button 
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10"
+                title="More Options"
+                data-testid="button-more-hero-options"
+              >
+                <MoreHorizontal className="h-4 w-4" />
               </button>
             </div>
           </div>

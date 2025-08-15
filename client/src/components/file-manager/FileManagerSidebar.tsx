@@ -50,8 +50,9 @@ export function FileManagerSidebar({
           </h2>
           <button 
             onClick={onToggle}
-            className="lg:hidden text-slate-400 hover:text-white transition-colors"
+            className="text-slate-400 hover:text-white transition-colors"
             data-testid="button-close-sidebar"
+            title="Close Sidebar"
           >
             <X className="h-5 w-5" />
           </button>

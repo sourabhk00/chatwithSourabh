@@ -6,7 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/hooks/use-chat";
 
 export default function ChatPage() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // Keep sidebar open by default
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // Sidebar can be opened and closed
   const [editorVisible, setEditorVisible] = useState(false);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'files' | 'history'>('files');

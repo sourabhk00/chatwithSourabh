@@ -1,6 +1,6 @@
 import { ChatMessage } from "@shared/schema";
 import { useEffect, useRef } from "react";
-import { Bot, User, Image, Code, FileText, Sparkles, MoreHorizontal, Mic } from "lucide-react";
+import { Bot, User, Image, Code, FileText, Sparkles, MoreHorizontal, Mic, Upload, Paperclip } from "lucide-react";
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -39,8 +39,7 @@ export function MessageList({ messages, isLoading, onSendMessage }: MessageListP
             Chat with Sourabh
           </h1>
           <p className="hero-subtitle">
-            Your AI assistant with advanced file analysis, code editing, and intelligent conversation capabilities.
-            Get smart answers and powerful tools in one place.
+            Smarter. Faster. Always right there for you — Chat with Sourabh
           </p>
           
           <div className="w-full max-w-3xl relative">
@@ -57,6 +56,27 @@ export function MessageList({ messages, isLoading, onSendMessage }: MessageListP
               data-testid="input-hero-message"
             />
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+              <input
+                type="file"
+                id="hero-file-input"
+                className="hidden"
+                multiple
+                accept=".pdf,.txt,.doc,.docx,.jpg,.jpeg,.png,.gif,.js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.h,.css,.html,.json,.md,.xml"
+                onChange={(e) => {
+                  // Handle file upload here
+                  if (e.target.files) {
+                    console.log('Files selected:', e.target.files);
+                  }
+                }}
+              />
+              <button 
+                onClick={() => document.getElementById('hero-file-input')?.click()}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                title="Upload Files"
+                data-testid="button-upload-files"
+              >
+                <Paperclip className="h-5 w-5" />
+              </button>
               <button 
                 className="text-slate-400 hover:text-slate-600 transition-colors p-1"
                 title="Voice Input"

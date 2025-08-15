@@ -1,7 +1,7 @@
 import { MessageList } from "./MessageList";
 import { ChatInput } from "./ChatInput";
 import { useChat } from "@/hooks/use-chat";
-import { Menu, Download, RotateCcw, Code } from "lucide-react";
+import { Menu, Download, RotateCcw, Code, Sidebar } from "lucide-react";
 
 interface ChatInterfaceProps {
   onToggleSidebar: () => void;
@@ -46,10 +46,11 @@ export function ChatInterface({
           <div className="flex items-center">
             <button 
               onClick={onToggleSidebar}
-              className="lg:hidden mr-3 text-slate-400 hover:text-white transition-colors"
+              className="mr-3 text-slate-400 hover:text-white transition-colors"
               data-testid="button-toggle-sidebar"
+              title="Toggle Sidebar"
             >
-              <Menu className="h-5 w-5" />
+              <Sidebar className="h-5 w-5" />
             </button>
             
             <div className="flex items-center">

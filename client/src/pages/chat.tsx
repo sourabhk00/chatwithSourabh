@@ -6,9 +6,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/hooks/use-chat";
 
 export default function ChatPage() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // Keep sidebar open by default
   const [editorVisible, setEditorVisible] = useState(false);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'files' | 'history'>('files');
   const isMobile = useIsMobile();
   const { messages } = useChat();
 
@@ -38,6 +39,8 @@ export default function ChatPage() {
         onToggle={toggleSidebar}
         selectedFileIds={selectedFileIds}
         onFileSelect={setSelectedFileIds}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
       
       {/* Main Content Area */}

@@ -36,17 +36,17 @@ export function MessageList({ messages, isLoading, onSendMessage }: MessageListP
       {messages.length === 0 ? (
         <div className="hero-container">
           <h1 className="hero-title">
-            Introducing Sourabh Kumar
+            Chat with Sourabh
           </h1>
           <p className="hero-subtitle">
-            Your AI assistant now has the smartest, fastest, most useful capabilities yet,
-            with advanced reasoning built in — so you get the best answer, every time.
+            Your AI assistant with advanced file analysis, code editing, and intelligent conversation capabilities.
+            Get smart answers and powerful tools in one place.
           </p>
           
           <div className="w-full max-w-3xl relative">
             <input
               type="text"
-              placeholder="Ask anything"
+              placeholder="Chat with Sourabh..."
               className="hero-input"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && e.currentTarget.value.trim()) {
@@ -56,9 +56,24 @@ export function MessageList({ messages, isLoading, onSendMessage }: MessageListP
               }}
               data-testid="input-hero-message"
             />
-            <button className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-              <Mic className="h-5 w-5" />
-            </button>
+            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+              <button 
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                title="Voice Input"
+                data-testid="button-voice-input"
+              >
+                <Mic className="h-5 w-5" />
+              </button>
+              <button 
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                title="Dictate Mode"
+                data-testid="button-dictate-mode"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
           </div>
           
           <div className="quick-actions">

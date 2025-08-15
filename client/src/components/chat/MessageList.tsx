@@ -1,5 +1,5 @@
 import { ChatMessage } from "@shared/schema";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bot, User, Image, Code, FileText, Sparkles, MoreHorizontal, Mic, Upload, Paperclip } from "lucide-react";
 
 interface MessageListProps {
@@ -10,13 +10,39 @@ interface MessageListProps {
 
 export function MessageList({ messages, isLoading, onSendMessage }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [animatingMessages, setAnimatingMessages] = useState<Set<string>>(new Set());
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: "smooth",
+        block: "end",
+        inline: "nearest"
+      });
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) {
+      // Add animation to new messages
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.id) {
+        setAnimatingMessages(prev => new Set(Array.from(prev).concat(lastMessage.id)));
+        
+        // Remove animation class after animation completes
+        setTimeout(() => {
+          setAnimatingMessages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(lastMessage.id);
+            return newSet;
+          });
+        }, 300);
+      }
+    }
+    
+    // Smooth scroll to bottom with delay for animation
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
   }, [messages, isLoading]);
 
   const quickActions = [
@@ -32,7 +58,7 @@ export function MessageList({ messages, isLoading, onSendMessage }: MessageListP
   };
 
   return (
-    <div className={`flex-1 overflow-y-auto ${messages.length === 0 ? 'gradient-bg' : 'bg-slate-900'}`} data-testid="list-messages">
+    <div className={`flex-1 overflow-y-auto scroll-container ${messages.length === 0 ? 'gradient-bg' : 'bg-slate-900'}`} data-testid="list-messages">
       {messages.length === 0 ? (
         <div className="hero-container">
           <h1 className="hero-title">
@@ -55,7 +81,7 @@ export function MessageList({ messages, isLoading, onSendMessage }: MessageListP
               }}
               data-testid="input-hero-message"
             />
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+            <div className="absolute right-3 md:right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
               <input
                 type="file"
                 id="hero-file-input"
@@ -71,22 +97,22 @@ export function MessageList({ messages, isLoading, onSendMessage }: MessageListP
               />
               <button 
                 onClick={() => document.getElementById('hero-file-input')?.click()}
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10 active:scale-95"
                 title="Upload Files"
                 data-testid="button-upload-files"
               >
                 <Paperclip className="h-4 w-4" />
               </button>
-              <div className="h-4 w-px bg-slate-300"></div>
+              <div className="h-4 w-px bg-slate-300 hidden sm:block"></div>
               <button 
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10 active:scale-95 hidden sm:flex"
                 title="Voice Input"
                 data-testid="button-voice-input"
               >
                 <Mic className="h-4 w-4" />
               </button>
               <button 
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10 active:scale-95 hidden md:flex"
                 title="Dictate Mode"
                 data-testid="button-dictate-mode"
               >
@@ -95,7 +121,7 @@ export function MessageList({ messages, isLoading, onSendMessage }: MessageListP
                 </svg>
               </button>
               <button 
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200 hover:bg-opacity-10 active:scale-95 block lg:hidden"
                 title="More Options"
                 data-testid="button-more-hero-options"
               >
@@ -112,55 +138,60 @@ export function MessageList({ messages, isLoading, onSendMessage }: MessageListP
                   key={index}
                   onClick={() => handleQuickAction(action.prompt)}
                   className="quick-action-btn"
+                  style={{ '--i': index } as React.CSSProperties}
                   data-testid={`button-quick-${action.label.toLowerCase().replace(' ', '-')}`}
                 >
                   <IconComponent className="h-4 w-4" />
-                  <span>{action.label}</span>
+                  <span className="hidden sm:inline">{action.label}</span>
+                  <span className="sm:hidden">{action.label.split(' ')[0]}</span>
                 </button>
               );
             })}
           </div>
         </div>
       ) : (
-        <div className="p-6 space-y-4 bg-slate-900">
-
-          {messages.map((message) => (
-        <div
-          key={message.id}
-          className={`message-box ${
-            message.sender === 'user' ? 'user-message ml-auto' : 'ai-message'
-          } p-4 rounded-2xl text-white`}
-          data-testid={`message-${message.id}`}
-        >
-          {message.sender === 'user' ? (
-            <div className="flex items-start space-x-3 justify-end">
-              <div className="text-right">
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              </div>
-              <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <User className="h-3 w-3 text-white" />
-              </div>
+        <div className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 bg-slate-900">
+          {messages.map((message, index) => (
+            <div
+              key={message.id}
+              className={`message-box ${
+                message.sender === 'user' ? 'user-message ml-auto' : 'ai-message'
+              } ${animatingMessages.has(message.id) ? 'animate-in' : ''} p-3 sm:p-4 rounded-2xl text-white`}
+              style={{ 
+                animationDelay: `${index * 0.05}s`,
+                '--message-index': index 
+              } as React.CSSProperties}
+              data-testid={`message-${message.id}`}
+            >
+              {message.sender === 'user' ? (
+                <div className="flex items-start space-x-2 sm:space-x-3 justify-end">
+                  <div className="text-right">
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                  </div>
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start space-x-2 sm:space-x-3">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">{message.content}</p>
+                  </div>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <Bot className="h-3 w-3 text-white" />
-              </div>
-              <div>
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
+          ))}
 
           {isLoading && (
-            <div className="message-box ai-message p-4 rounded-2xl text-white">
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                  <Bot className="h-3 w-3 text-white" />
+            <div className="message-box ai-message p-3 sm:p-4 rounded-2xl text-white animate-in">
+              <div className="flex items-start space-x-2 sm:space-x-3">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                 </div>
-                <div className="loading-dots flex items-center space-x-1">
+                <div className="loading-dots flex items-center space-x-1 py-1">
                   <span className="dot-1 w-2 h-2 bg-slate-300 rounded-full"></span>
                   <span className="dot-2 w-2 h-2 bg-slate-300 rounded-full"></span>
                   <span className="dot-3 w-2 h-2 bg-slate-300 rounded-full"></span>

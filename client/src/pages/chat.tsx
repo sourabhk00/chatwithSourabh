@@ -7,12 +7,19 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useChat } from "@/hooks/use-chat";
 
 export default function ChatPage() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // Sidebar can be opened and closed
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [editorVisible, setEditorVisible] = useState(false);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'files' | 'history'>('files');
   const isMobile = useIsMobile();
   const { messages } = useChat();
+  
+  // Auto-collapse sidebar on mobile when starting to chat
+  useEffect(() => {
+    if (isMobile && messages.length > 0 && !sidebarCollapsed) {
+      setSidebarCollapsed(true);
+    }
+  }, [isMobile, messages.length, sidebarCollapsed]);
 
   const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed);
   const toggleEditor = () => setEditorVisible(!editorVisible);
@@ -33,7 +40,7 @@ export default function ChatPage() {
   }, [messages.length]);
 
   return (
-    <div className="flex flex-col h-screen bg-slate-900 text-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-900 text-white overflow-hidden relative">
       {/* Top Navigation */}
       <TopNavigation 
         sidebarCollapsed={sidebarCollapsed}
@@ -41,7 +48,7 @@ export default function ChatPage() {
         messages={messages}
       />
       
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* File Manager Sidebar */}
         <FileManagerSidebar 
           collapsed={sidebarCollapsed} 
@@ -52,8 +59,19 @@ export default function ChatPage() {
           onTabChange={setActiveTab}
         />
         
+        {/* Sidebar Overlay for mobile */}
+        {isMobile && !sidebarCollapsed && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+            onClick={toggleSidebar}
+            data-testid="sidebar-overlay"
+          />
+        )}
+        
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col lg:flex-row">
+        <div className={`flex-1 flex flex-col lg:flex-row chat-container transition-all duration-300 ${
+          isMobile && !sidebarCollapsed ? 'sidebar-open' : ''
+        }`}>
           {/* Chat Interface */}
           <ChatInterface
             onToggleSidebar={toggleSidebar}
@@ -64,10 +82,12 @@ export default function ChatPage() {
           
           {/* Code Editor */}
           {editorVisible && (
-            <CodeEditor 
-              onClose={() => setEditorVisible(false)}
-              visible={editorVisible}
-            />
+            <div className={`${isMobile ? 'fixed inset-0 z-20 bg-slate-900' : 'w-1/2'}`}>
+              <CodeEditor 
+                onClose={() => setEditorVisible(false)}
+                visible={editorVisible}
+              />
+            </div>
           )}
         </div>
       </div>

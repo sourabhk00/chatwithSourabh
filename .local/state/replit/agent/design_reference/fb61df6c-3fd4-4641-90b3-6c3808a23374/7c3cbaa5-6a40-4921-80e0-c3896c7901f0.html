@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Sourabh Kumar - AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    },
+                    colors: {
+                        'editor-bg': '#1e1e1e',
+                        'editor-line': '#2d2d2d'
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .message-box {
+            max-width: 80%;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease-out;
+        }
+        .user-message {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            margin-left: auto;
+        }
+        .ai-message {
+            background: linear-gradient(135deg, #475569, #374151);
+        }
+        .loading-dots span {
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loading-dots .dot-1 { animation-delay: -0.32s; }
+        .loading-dots .dot-2 { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .file-upload-zone {
+            transition: all 0.3s ease;
+            border: 2px dashed #475569;
+        }
+        .file-upload-zone.dragover {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .sidebar-toggle {
+            transition: transform 0.3s ease;
+        }
+        .sidebar-collapsed {
+            transform: translateX(-100%);
+        }
+        .panel-transition {
+            transition: all 0.3s ease;
+        }
+        .editor-container {
+            min-height: 300px;
+        }
+        .file-item {
+            transition: all 0.2s ease;
+        }
+        .file-item:hover {
+            background-color: #374151;
+            transform: translateX(4px);
+        }
+        .syntax-highlight {
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white font-inter overflow-hidden">
+    <!-- @COMPONENT: MainLayout -->
+    <div class="flex h-screen">
+        
+        <!-- @COMPONENT: FileManagerSidebar -->
+        <div id="sidebar" class="w-80 bg-slate-800 border-r border-slate-700 flex flex-col panel-transition">
+            <!-- Sidebar Header -->
+            <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-white flex items-center">
+                    <i class="fas fa-folder-open mr-2 text-blue-400"></i>
+                    File Manager
+                </h2>
+                <button id="sidebar-toggle" class="lg:hidden text-slate-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- File Upload Zone -->
+            <div class="p-4">
+                <div id="file-upload-zone" class="file-upload-zone rounded-xl p-6 text-center cursor-pointer">
+                    <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-3"></i>
+                    <p class="text-slate-300 mb-2">Drop files here or click to upload</p>
+                    <p class="text-xs text-slate-500">Supports: PDF, TXT, DOC, Images, Code files</p>
+                    <input type="file" id="file-input" class="hidden" multiple accept=".pdf,.txt,.doc,.docx,.jpg,.jpeg,.png,.gif,.js,.py,.html,.css,.json,.md">
+                </div>
+            </div>
+
+            <!-- File List -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="p-4">
+                    <h3 class="text-sm font-medium text-slate-400 mb-3 uppercase tracking-wide">Recent Files</h3>
+                    <div id="file-list" class="space-y-2">
+                        <!-- Sample files for demonstration -->
+                        <div class="file-item p-3 rounded-lg bg-slate-700 cursor-pointer" data-mock="true">
+                            <div class="flex items-center">
+                                <i class="fas fa-file-code text-blue-400 mr-3"></i>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-white truncate">app.js</p>
+                                    <p class="text-xs text-slate-400">2.3 KB • JavaScript</p>
+                                </div>
+                                <div class="flex space-x-1">
+                                    <button class="text-slate-400 hover:text-blue-400" title="Edit">
+                                        <i class="fas fa-edit text-xs"></i>
+                                    </button>
+                                    <button class="text-slate-400 hover:text-red-400" title="Delete">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="file-item p-3 rounded-lg bg-slate-700 cursor-pointer" data-mock="true">
+                            <div class="flex items-center">
+                                <i class="fas fa-file-pdf text-red-400 mr-3"></i>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-white truncate">project_requirements.pdf</p>
+                                    <p class="text-xs text-slate-400">1.2 MB • PDF Document</p>
+                                </div>
+                                <div class="flex space-x-1">
+                                    <button class="text-slate-400 hover:text-blue-400" title="View">
+                                        <i class="fas fa-eye text-xs"></i>
+                                    </button>
+                                    <button class="text-slate-400 hover:text-red-400" title="Delete">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="file-item p-3 rounded-lg bg-slate-700 cursor-pointer" data-mock="true">
+                            <div class="flex items-center">
+                                <i class="fas fa-image text-green-400 mr-3"></i>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-white truncate">screenshot.png</p>
+                                    <p class="text-xs text-slate-400">456 KB • PNG Image</p>
+                                </div>
+                                <div class="flex space-x-1">
+                                    <button class="text-slate-400 hover:text-blue-400" title="Preview">
+                                        <i class="fas fa-search-plus text-xs"></i>
+                                    </button>
+                                    <button class="text-slate-400 hover:text-red-400" title="Delete">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Storage Usage -->
+            <div class="p-4 border-t border-slate-700">
+                <div class="text-xs text-slate-400 mb-2">Storage Usage</div>
+                <div class="w-full bg-slate-700 rounded-full h-2">
+                    <div class="bg-blue-500 h-2 rounded-full" style="width: 45%" data-mock="true"></div>
+                </div>
+                <div class="flex justify-between text-xs text-slate-500 mt-1">
+                    <span data-bind="storage.used">4.5 GB used</span>
+                    <span data-bind="storage.total">10 GB total</span>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: FileManagerSidebar -->
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col lg:flex-row">
+            
+            <!-- @COMPONENT: ChatInterface -->
+            <div class="flex-1 flex flex-col bg-slate-900">
+                <!-- Chat Header -->
+                <div class="p-4 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <button id="mobile-sidebar-toggle" class="lg:hidden mr-3 text-slate-400 hover:text-white">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-robot text-white text-sm"></i>
+                            </div>
+                            <div>
+                                <h1 class="text-lg font-semibold">Chat with Sourabh Kumar</h1>
+                                <p class="text-xs text-slate-400">AI Assistant • Online</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-700" title="Clear Chat">
+                            <i class="fas fa-broom"></i>
+                        </button>
+                        <button class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-700" title="Export Chat">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button id="editor-toggle" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-700" title="Toggle Editor">
+                            <i class="fas fa-code"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div id="chat-messages" class="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-900">
+                    <div class="message-box ai-message p-4 rounded-2xl text-white">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-robot text-white text-xs"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm">Hello! I'm Sourabh Kumar, your AI assistant. I can help you with:</p>
+                                <ul class="text-sm mt-2 space-y-1 text-slate-200">
+                                    <li>• <strong>File Analysis:</strong> Upload documents, images, or code files for analysis</li>
+                                    <li>• <strong>Code Editing:</strong> Use the integrated editor for programming tasks</li>
+                                    <li>• <strong>Document Processing:</strong> Extract insights from PDFs and text files</li>
+                                    <li>• <strong>General Questions:</strong> Ask me anything you'd like to know</li>
+                                </ul>
+                                <p class="text-sm mt-2">What would you like to work on today?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input Area -->
+                <div class="p-4 bg-slate-800 border-t border-slate-700">
+                    <!-- File Attachment Preview -->
+                    <div id="attachment-preview" class="hidden mb-3">
+                        <div class="flex items-center space-x-2 p-3 bg-slate-700 rounded-lg">
+                            <i class="fas fa-paperclip text-blue-400"></i>
+                            <span class="text-sm text-slate-300" id="attachment-name">No file selected</span>
+                            <button id="remove-attachment" class="ml-auto text-slate-400 hover:text-red-400">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="flex items-end space-x-2">
+                        <button id="attach-file" class="text-slate-400 hover:text-blue-400 p-3 rounded-xl hover:bg-slate-700 transition-colors">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <div class="flex-1 relative">
+                            <textarea
+                                id="user-input"
+                                class="w-full resize-none p-3 pr-12 rounded-xl bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400 max-h-32"
+                                rows="1"
+                                placeholder="Type your message or ask about uploaded files..."
+                                oninput="autoResize(this)"
+                            ></textarea>
+                            <button
+                                id="send-button"
+                                class="absolute right-2 bottom-2 bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="flex items-center space-x-2 mt-3">
+                        <button class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 transition-colors" data-action="analyze-code">
+                            <i class="fas fa-code mr-1"></i>Analyze Code
+                        </button>
+                        <button class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 transition-colors" data-action="explain-file">
+                            <i class="fas fa-file-alt mr-1"></i>Explain File
+                        </button>
+                        <button class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 transition-colors" data-action="generate-code">
+                            <i class="fas fa-magic mr-1"></i>Generate Code
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: ChatInterface -->
+
+            <!-- @COMPONENT: CodeEditor -->
+            <div id="editor-panel" class="w-1/2 bg-slate-800 border-l border-slate-700 flex flex-col hidden lg:flex">
+                <!-- Editor Header -->
+                <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <h3 class="text-lg font-semibold text-white flex items-center">
+                            <i class="fas fa-edit mr-2 text-green-400"></i>
+                            Code Editor
+                        </h3>
+                        <select id="language-selector" class="bg-slate-700 text-white text-sm rounded px-2 py-1 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="javascript">JavaScript</option>
+                            <option value="python">Python</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="json">JSON</option>
+                            <option value="markdown">Markdown</option>
+                            <option value="plaintext">Plain Text</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button id="run-code" class="text-green-400 hover:text-green-300 p-2 rounded-lg hover:bg-slate-700" title="Run Code">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button id="format-code" class="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-slate-700" title="Format Code">
+                            <i class="fas fa-align-left"></i>
+                        </button>
+                        <button id="save-code" class="text-purple-400 hover:text-purple-300 p-2 rounded-lg hover:bg-slate-700" title="Save File">
+                            <i class="fas fa-save"></i>
+                        </button>
+                        <button id="close-editor" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-700 lg:hidden" title="Close Editor">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Editor Tabs -->
+                <div class="flex border-b border-slate-700 bg-slate-750">
+                    <div class="flex space-x-1 p-2">
+                        <div class="flex items-center bg-slate-700 px-3 py-2 rounded-t-lg text-sm">
+                            <i class="fas fa-file-code text-blue-400 mr-2"></i>
+                            <span class="text-white" data-bind="editor.filename">untitled.js</span>
+                            <button class="ml-2 text-slate-400 hover:text-red-400">
+                                <i class="fas fa-times text-xs"></i>
+                            </button>
+                        </div>
+                        <button class="text-slate-400 hover:text-white px-3 py-2 rounded-t-lg text-sm">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Monaco Editor Container -->
+                <div id="monaco-editor" class="flex-1 editor-container"></div>
+
+                <!-- Editor Footer -->
+                <div class="p-3 bg-slate-750 border-t border-slate-700 flex items-center justify-between text-xs text-slate-400">
+                    <div class="flex items-center space-x-4">
+                        <span>Line <span id="line-number" data-bind="editor.line">1</span>, Column <span id="column-number" data-bind="editor.column">1</span></span>
+                        <span id="word-count" data-bind="editor.wordCount">0 words</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span id="file-encoding">UTF-8</span>
+                        <span id="file-language" data-bind="editor.language">JavaScript</span>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: CodeEditor -->
+        </div>
+    </div>
+    <!-- @END_COMPONENT: MainLayout -->
+
+    <!-- @COMPONENT: FilePreviewModal -->
+    <div id="file-preview-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-white" id="preview-title">File Preview</h3>
+                <button id="close-preview" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="preview-content" class="p-4 overflow-auto max-h-[70vh]">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: FilePreviewModal -->
+
+    <script>
+        // Initialize Monaco Editor
+        let editor = null;
+        let currentFiles = [];
+        let isDragging = false;
+
+        // Initialize the application
+        (function initializeApp() {
+            setupEventListeners();
+            initializeMonacoEditor();
+            setupFileUpload();
+            setupResponsiveLayout();
+        })();
+
+        // Auto-resize textarea
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        // Setup all event listeners
+        function setupEventListeners() {
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+            const editorToggle = document.getElementById('editor-toggle');
+
+            // Chat functionality
+            sendButton.addEventListener('click', sendMessage);
+            userInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Sidebar toggles
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', toggleSidebar);
+            }
+            if (mobileSidebarToggle) {
+                mobileSidebarToggle.addEventListener('click', toggleSidebar);
+            }
+
+            // Editor toggle
+            if (editorToggle) {
+                editorToggle.addEventListener('click', toggleEditor);
+            }
+
+            // Quick actions
+            document.querySelectorAll('[data-action]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const action = e.target.closest('[data-action]').dataset.action;
+                    handleQuickAction(action);
+                });
+            });
+        }
+
+        // Setup file upload functionality
+        function setupFileUpload() {
+            const fileUploadZone = document.getElementById('file-upload-zone');
+            const fileInput = document.getElementById('file-input');
+
+            // Click to upload
+            fileUploadZone.addEventListener('click', () => fileInput.click());
+
+            // Drag and drop
+            fileUploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadZone.classList.add('dragover');
+            });
+
+            fileUploadZone.addEventListener('dragleave', () => {
+                fileUploadZone.classList.remove('dragover');
+            });
+
+            fileUploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadZone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        }
+
+        // Handle file uploads
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                // TODO: Implement file upload logic
+                console.log('Uploading file:', file.name);
+                addFileToList(file);
+                
+                // Show success message in chat
+                appendMessage(`📎 File "${file.name}" uploaded successfully! You can now ask me questions about it.`, 'system');
+            });
+        }
+
+        // Add file to file list
+        function addFileToList(file) {
+            const fileList = document.getElementById('file-list');
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item p-3 rounded-lg bg-slate-700 cursor-pointer';
+            
+            const icon = getFileIcon(file.type, file.name);
+            const size = formatFileSize(file.size);
+            
+            fileItem.innerHTML = `
+                <div class="flex items-center">
+                    <i class="${icon} mr-3"></i>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-white truncate">${file.name}</p>
+                        <p class="text-xs text-slate-400">${size} • ${getFileType(file.name)}</p>
+                    </div>
+                    <div class="flex space-x-1">
+                        <button class="text-slate-400 hover:text-blue-400" title="Edit" onclick="openInEditor('${file.name}')">
+                            <i class="fas fa-edit text-xs"></i>
+                        </button>
+                        <button class="text-slate-400 hover:text-red-400" title="Delete" onclick="deleteFile('${file.name}')">
+                            <i class="fas fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            fileList.insertBefore(fileItem, fileList.firstChild);
+        }
+
+        // Initialize Monaco Editor
+        function initializeMonacoEditor() {
+            require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' }});
+            require(['vs/editor/editor.main'], function () {
+                editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                    value: '// Welcome to the Code Editor!\n// Start typing your code here...\n\nfunction hello() {\n    console.log("Hello, World!");\n}\n\nhello();',
+                    language: 'javascript',
+                    theme: 'vs-dark',
+                    fontSize: 14,
+                    minimap: { enabled: false },
+                    wordWrap: 'on',
+                    automaticLayout: true,
+                    scrollBeyondLastLine: false,
+                    renderLineHighlight: 'all',
+                    selectOnLineNumbers: true,
+                    roundedSelection: false,
+                    readOnly: false,
+                    cursorStyle: 'line',
+                    autoIndent: 'full',
+                    formatOnPaste: true,
+                    formatOnType: true
+                });
+
+                // Update language when selector changes
+                document.getElementById('language-selector').addEventListener('change', (e) => {
+                    monaco.editor.setModelLanguage(editor.getModel(), e.target.value);
+                    document.getElementById('file-language').textContent = e.target.options[e.target.selectedIndex].text;
+                });
+
+                // Update cursor position
+                editor.onDidChangeCursorPosition((e) => {
+                    document.getElementById('line-number').textContent = e.position.lineNumber;
+                    document.getElementById('column-number').textContent = e.position.column;
+                });
+
+                // Update word count
+                editor.onDidChangeModelContent(() => {
+                    const content = editor.getValue();
+                    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+                    document.getElementById('word-count').textContent = `${wordCount} words`;
+                });
+            });
+        }
+
+        // Setup responsive layout
+        function setupResponsiveLayout() {
+            const handleResize = () => {
+                const width = window.innerWidth;
+                const sidebar = document.getElementById('sidebar');
+                const editorPanel = document.getElementById('editor-panel');
+                
+                if (width < 1024) { // lg breakpoint
+                    sidebar.classList.add('absolute', 'inset-y-0', 'left-0', 'z-40');
+                    if (!sidebar.classList.contains('sidebar-collapsed')) {
+                        sidebar.classList.add('sidebar-collapsed');
+                    }
+                } else {
+                    sidebar.classList.remove('absolute', 'inset-y-0', 'left-0', 'z-40', 'sidebar-collapsed');
+                }
+            };
+
+            window.addEventListener('resize', handleResize);
+            handleResize(); // Initial call
+        }
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('sidebar-collapsed');
+        }
+
+        // Toggle editor
+        function toggleEditor() {
+            const editorPanel = document.getElementById('editor-panel');
+            editorPanel.classList.toggle('hidden');
+        }
+
+        // Handle quick actions
+        function handleQuickAction(action) {
+            const prompts = {
+                'analyze-code': 'Please analyze the code in my editor and provide feedback on best practices, potential issues, and suggestions for improvement.',
+                'explain-file': 'Can you explain what the uploaded file contains and its purpose?',
+                'generate-code': 'Please generate code based on my requirements. I\'ll specify what I need.'
+            };
+            
+            const userInput = document.getElementById('user-input');
+            userInput.value = prompts[action] || '';
+            userInput.focus();
+            autoResize(userInput);
+        }
+
+        // Send message function
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const message = userInput.value.trim();
+            if (message === '') return;
+
+            // Display user message
+            appendMessage(message, 'user');
+            userInput.value = '';
+            userInput.style.height = 'auto';
+
+            // Show loading indicator
+            showLoadingIndicator();
+
+            // TODO: Implement AI API call
+            // For now, simulate response
+            setTimeout(() => {
+                hideLoadingIndicator();
+                const responses = [
+                    "I'd be happy to help! Could you please provide more details about what you're working on?",
+                    "That's an interesting question. Based on the context, here's what I think...",
+                    "I can see you've uploaded some files. Let me analyze them for you.",
+                    "Great! I can help you with that. Let me break this down step by step."
+                ];
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                appendMessage(randomResponse, 'ai');
+            }, 1500);
+        }
+
+        // Append message to chat
+        function appendMessage(text, sender) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            
+            if (sender === 'user') {
+                messageDiv.className = 'message-box user-message p-4 rounded-2xl text-white ml-auto';
+                messageDiv.innerHTML = `
+                    <div class="flex items-start space-x-3 justify-end">
+                        <div class="text-right">
+                            <p class="text-sm">${text}</p>
+                        </div>
+                        <div class="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                            <i class="fas fa-user text-white text-xs"></i>
+                        </div>
+                    </div>
+                `;
+            } else if (sender === 'system') {
+                messageDiv.className = 'message-box p-3 rounded-xl bg-green-800 text-green-100 text-center';
+                messageDiv.innerHTML = `<p class="text-sm">${text}</p>`;
+            } else {
+                messageDiv.className = 'message-box ai-message p-4 rounded-2xl text-white';
+                messageDiv.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <div class="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                            <i class="fas fa-robot text-white text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm">${text}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Show loading indicator
+        function showLoadingIndicator() {
+            const chatMessages = document.getElementById('chat-messages');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading-indicator';
+            loadingDiv.className = 'message-box ai-message p-4 rounded-2xl text-white';
+            loadingDiv.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                        <i class="fas fa-robot text-white text-xs"></i>
+                    </div>
+                    <div class="loading-dots flex items-center space-x-1">
+                        <span class="dot-1 w-2 h-2 bg-slate-300 rounded-full"></span>
+                        <span class="dot-2 w-2 h-2 bg-slate-300 rounded-full"></span>
+                        <span class="dot-3 w-2 h-2 bg-slate-300 rounded-full"></span>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Hide loading indicator
+        function hideLoadingIndicator() {
+            const loadingDiv = document.getElementById('loading-indicator');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
+
+        // Utility functions
+        function getFileIcon(type, filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'js': 'fas fa-file-code text-yellow-400',
+                'html': 'fas fa-file-code text-orange-400',
+                'css': 'fas fa-file-code text-blue-400',
+                'py': 'fas fa-file-code text-green-400',
+                'java': 'fas fa-file-code text-red-400',
+                'pdf': 'fas fa-file-pdf text-red-400',
+                'doc': 'fas fa-file-word text-blue-400',
+                'docx': 'fas fa-file-word text-blue-400',
+                'txt': 'fas fa-file-alt text-slate-400',
+                'md': 'fas fa-file-alt text-gray-400',
+                'json': 'fas fa-file-code text-green-400',
+                'xml': 'fas fa-file-code text-orange-400',
+                'jpg': 'fas fa-image text-green-400',
+                'jpeg': 'fas fa-image text-green-400',
+                'png': 'fas fa-image text-green-400',
+                'gif': 'fas fa-image text-green-400',
+                'svg': 'fas fa-image text-purple-400'
+            };
+            return icons[ext] || 'fas fa-file text-slate-400';
+        }
+
+        function getFileType(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const types = {
+                'js': 'JavaScript',
+                'html': 'HTML',
+                'css': 'CSS',
+                'py': 'Python',
+                'java': 'Java',
+                'pdf': 'PDF Document',
+                'doc': 'Word Document',
+                'docx': 'Word Document',
+                'txt': 'Text File',
+                'md': 'Markdown',
+                'json': 'JSON',
+                'xml': 'XML',
+                'jpg': 'JPEG Image',
+                'jpeg': 'JPEG Image',
+                'png': 'PNG Image',
+                'gif': 'GIF Image',
+                'svg': 'SVG Image'
+            };
+            return types[ext] || 'Unknown';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        // Placeholder functions for file operations
+        function openInEditor(filename) {
+            // TODO: Load file content into editor
+            console.log('Opening file in editor:', filename);
+            const editorPanel = document.getElementById('editor-panel');
+            editorPanel.classList.remove('hidden');
+        }
+
+        function deleteFile(filename) {
+            // TODO: Implement file deletion
+            console.log('Deleting file:', filename);
+            if (confirm(`Are you sure you want to delete "${filename}"?`)) {
+                // Remove from UI and storage
+            }
+        }
+    </script>
+</body>
+</html>

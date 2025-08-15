@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Chat with Sourabh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate-900 */
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 768px; /* md screen size */
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            border-radius: 1.5rem; /* 24px */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+        }
+        .message-box {
+            background-color: #1e293b; /* Slate-800 */
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #3b82f6; /* Blue-500 */
+            color: white;
+            align-self: flex-end;
+        }
+        .ai-message {
+            background-color: #475569; /* Slate-600 */
+            color: white;
+            align-self: flex-start;
+        }
+        .loading-dots span {
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loading-dots .dot-1 {
+            animation-delay: -0.32s;
+        }
+        .loading-dots .dot-2 {
+            animation-delay: -0.16s;
+        }
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="chat-container bg-slate-900 text-white">
+
+        <!-- Chat messages area -->
+        <div id="chat-messages" class="flex-grow p-6 overflow-y-auto space-y-4">
+            <div class="message-box ai-message">
+                Hello! I'm a Sourabh Kumar. How can I help you today?
+            </div>
+        </div>
+
+        <!-- Input area -->
+        <div class="p-4 bg-slate-800 border-t border-slate-700 flex items-center space-x-2">
+            <textarea
+                id="user-input"
+                class="flex-grow resize-none p-3 rounded-xl bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400"
+                rows="1"
+                placeholder="Chat with Sourabh..."
+                oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"'
+            ></textarea>
+            <button
+                id="send-button"
+                class="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                </svg>
+            </button>
+        </div>
+
+    </div>
+
+    <script type="module">
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+
+        // Check for provided app ID and API key.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const apiKey = ''; // Leave as empty string for Canvas.
+
+        // Append a new message to the chat window
+        const appendMessage = (text, sender) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message-box');
+            if (sender === 'user') {
+                messageDiv.classList.add('user-message');
+            } else {
+                messageDiv.classList.add('ai-message');
+            }
+            messageDiv.innerText = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to the latest message
+        };
+
+        // Create and show a loading indicator
+        const showLoadingIndicator = () => {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading-indicator';
+            loadingDiv.classList.add('flex', 'space-x-1', 'items-center', 'message-box', 'ai-message', 'loading-dots');
+            loadingDiv.innerHTML = `
+                <span class="dot-1 w-3 h-3 bg-slate-300 rounded-full"></span>
+                <span class="dot-2 w-3 h-3 bg-slate-300 rounded-full"></span>
+                <span class="dot-3 w-3 h-3 bg-slate-300 rounded-full"></span>
+            `;
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+
+        // Hide the loading indicator
+        const hideLoadingIndicator = () => {
+            const loadingDiv = document.getElementById('loading-indicator');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        };
+
+        // Function to make the API call
+        const fetchAIResponse = async (prompt) => {
+            let retryCount = 0;
+            const maxRetries = 5;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+
+            while (retryCount < maxRetries) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429) { // Too Many Requests
+                            const delay = Math.pow(2, retryCount) * 1000;
+                            console.error(`Rate limit exceeded. Retrying in ${delay}ms...`);
+                            await new Promise(res => setTimeout(res, delay));
+                            retryCount++;
+                            continue;
+                        }
+                        throw new Error(`API error: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        return result.candidates[0].content.parts[0].text;
+                    } else {
+                        throw new Error('Unexpected response structure from API.');
+                    }
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    return "Sorry, I'm having trouble connecting right now. Please try again.";
+                }
+            }
+            return "Sorry, I'm unable to complete your request at this time.";
+        };
+
+        // Main function to handle user input
+        const sendMessage = async () => {
+            const message = userInput.value.trim();
+            if (message === '') return;
+
+            // Display user message
+            appendMessage(message, 'user');
+            userInput.value = '';
+            userInput.style.height = 'auto'; // Reset textarea height
+
+            // Show loading indicator
+            showLoadingIndicator();
+
+            // Fetch response from AI
+            const aiResponse = await fetchAIResponse(message);
+            
+            // Hide loading indicator
+            hideLoadingIndicator();
+
+            // Display AI response
+            appendMessage(aiResponse, 'ai');
+        };
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
 });
 
+
 export const files = pgTable("files", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   filename: text("filename").notNull(),

@@ -8,6 +8,7 @@ interface MessageListProps {
   onSendMessage: (content: string) => void;
 }
 
+
 export function MessageList({ messages, isLoading, onSendMessage }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [animatingMessages, setAnimatingMessages] = useState<Set<string>>(new Set());

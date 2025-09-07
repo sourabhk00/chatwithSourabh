@@ -4,6 +4,7 @@ import { ChatMessage } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+
 export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();

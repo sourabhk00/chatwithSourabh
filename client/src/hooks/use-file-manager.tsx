@@ -4,6 +4,7 @@ import { File } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+
 export function useFileManager() {
   const [uploadProgress, setUploadProgress] = useState<number | undefined>();
   const queryClient = useQueryClient();

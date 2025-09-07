@@ -8,6 +8,7 @@ interface ChatInputProps {
   isLoading: boolean;
 }
 
+
 export function ChatInput({ onSendMessage, selectedFileIds, isLoading }: ChatInputProps) {
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);

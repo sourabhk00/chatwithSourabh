@@ -10,6 +10,7 @@ interface ChatInterfaceProps {
   editorVisible: boolean;
 }
 
+
 export function ChatInterface({ 
   onToggleSidebar, 
   onToggleEditor, 

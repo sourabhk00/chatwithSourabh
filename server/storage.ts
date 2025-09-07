@@ -1,6 +1,7 @@
 import { type User, type InsertUser, type File, type InsertFile, type ChatMessage, type InsertChatMessage } from "@shared/schema";
 import { randomUUID } from "crypto";
 
+
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
